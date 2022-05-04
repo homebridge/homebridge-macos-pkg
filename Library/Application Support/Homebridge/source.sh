@@ -18,6 +18,7 @@ export npm_config_store_dir="$HB_SERVICE_STORAGE_PATH/node_modules/.pnpm-store"
 export npm_config_prefix="$HB_APP_PATH/node-$HB_PKG_ARCH"
 export npm_config_global_pnpmfile="$HB_APP_PATH/global_pnpmfile.cjs"
 
+export HOMEBRIDGE_MACOS_PACKAGE=1
 export UIX_CUSTOM_PLUGIN_PATH=$HB_SERVICE_STORAGE_PATH/node_modules
 export UIX_BASE_PATH_OVERRIDE=$HB_SERVICE_STORAGE_PATH/node_modules/homebridge-config-ui-x
 export UIX_USE_PNPM=1

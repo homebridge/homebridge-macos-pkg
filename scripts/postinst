@@ -27,7 +27,7 @@ mkdir -p "$HB_SERVICE_STORAGE_PATH"
 corepack enable
 corepack prepare pnpm@7.0.0 --activate
 
-pnpm install -C "$HB_SERVICE_STORAGE_PATH" homebridge@latest homebridge-config-ui-x@4.43.3-test.5
+pnpm install -C "$HB_SERVICE_STORAGE_PATH" homebridge@latest homebridge-config-ui-x@4.43.3-test.12
 
 HB_USER=$USER
 if [ "$HB_USER" = "root" ]; then

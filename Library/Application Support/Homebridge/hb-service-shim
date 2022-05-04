@@ -6,14 +6,14 @@
 PORT=8581
 
 # can't use this - need to bundle "jq"
-# function check_port_override {
-#   if [ -f "$HB_SERVICE_STORAGE_PATH/config.json" ]; then
-#     PORT_FROM_CONFIG=$(cat "$HB_SERVICE_STORAGE_PATH/config.json" | jq '.platforms[] | select(.platform == "config") | .port' 2> /dev/null)
-#     if [ ${#PORT_FROM_CONFIG} -gt 0 ]; then
-#       PORT=$PORT_FROM_CONFIG
-#     fi
-#   fi
-# }
+function check_port_override {
+  if [ -f "$HB_SERVICE_STORAGE_PATH/config.json" ]; then
+    POSSIBLE_PORT=$(node "$HB_APP_PATH/scripts/get-ui-port.js" "$HB_SERVICE_STORAGE_PATH/config.json")
+    if [ "$POSSIBLE_PORT" != "" ]; then
+      PORT=$POSSIBLE_PORT
+    fi
+  fi
+}
 
 case "$1" in
   "start")
@@ -33,19 +33,22 @@ case "$1" in
     ;;
 
   "update-node")
+    hb_cmd="hb-service $@"
     cd "$HB_SERVICE_STORAGE_PATH"
-    sudo hb-service $@
-    sudo chown -R "$USER": "$HB_SERVICE_STORAGE_PATH"
+    exec sudo bash --rcfile "$HB_APP_PATH/source.sh" -ci "$hb_cmd"
     ;;
 
   "rebuild")
+    hb_cmd="hb-service $@"
     cd "$HB_SERVICE_STORAGE_PATH"
-    hb-service $@
+    exec bash --rcfile "$HB_APP_PATH/source.sh" -ci "$hb_cmd"
     ;;
 
   "status")
     check_port_override
-    hb-service status --port $PORT
+    hb_cmd="hb-service status --port $PORT"
+    cd "$HB_SERVICE_STORAGE_PATH"
+    exec bash --rcfile "$HB_APP_PATH/source.sh" -ci "$hb_cmd"
     ;;
 
   "add")
