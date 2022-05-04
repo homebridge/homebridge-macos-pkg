@@ -1,0 +1,96 @@
+#!/bin/bash
+
+. "/Library/Application Support/Homebridge/source.sh"
+
+# default port
+PORT=8581
+
+# can't use this - need to bundle "jq"
+# function check_port_override {
+#   if [ -f "$HB_SERVICE_STORAGE_PATH/config.json" ]; then
+#     PORT_FROM_CONFIG=$(cat "$HB_SERVICE_STORAGE_PATH/config.json" | jq '.platforms[] | select(.platform == "config") | .port' 2> /dev/null)
+#     if [ ${#PORT_FROM_CONFIG} -gt 0 ]; then
+#       PORT=$PORT_FROM_CONFIG
+#     fi
+#   fi
+# }
+
+case "$1" in
+  "start")
+    echo "Starting Homebridge..."
+    sudo launchctl load -w "$HOMEBRIDGE_PLIST_PATH" &>/dev/null
+    ;;
+
+  "stop")
+    echo "Stopping Homebridge..."
+    sudo launchctl unload -w "$HOMEBRIDGE_PLIST_PATH" &>/dev/null
+    ;;
+
+  "restart")
+    echo "Restarting Homebridge..."
+    sudo launchctl unload -w "$HOMEBRIDGE_PLIST_PATH" &>/dev/null
+    sudo launchctl load -w "$HOMEBRIDGE_PLIST_PATH" &>/dev/null
+    ;;
+
+  "update-node")
+    cd "$HB_SERVICE_STORAGE_PATH"
+    sudo hb-service $@
+    sudo chown -R "$USER": "$HB_SERVICE_STORAGE_PATH"
+    ;;
+
+  "rebuild")
+    cd "$HB_SERVICE_STORAGE_PATH"
+    hb-service $@
+    ;;
+
+  "status")
+    check_port_override
+    hb-service status --port $PORT
+    ;;
+
+  "add")
+    pnpm -C "$HB_SERVICE_STORAGE_PATH" $@
+    ;;
+
+  "remove")
+    pnpm -C "$HB_SERVICE_STORAGE_PATH" $@
+    ;;
+
+  "logs")
+    exec tail -n 100 -f "$HB_SERVICE_STORAGE_PATH/homebridge.log"
+    ;;
+
+  "shell")
+    exec  "/Library/Application Support/Homebridge/hb-shell"
+    ;;
+
+  "install")
+    echo "The 'hb-service install' command is not available when Homebridge is running as a system package."
+    exit 1
+    ;;
+
+  "uninstall")
+    echo "The 'hb-service uninstall' command is not available when Homebridge is running as a system package."
+    exit 1
+    ;;
+
+  *)
+    printf '%s\n' \
+      "Usage: hb-service [start|stop|restart|logs|status|update-node]"   \
+      ""   \
+      "This hb-service command is provided by Homebridge macOS Package" \
+      "" \
+      "Please provide a command:" \
+      "    start                            start the homebridge service" \
+      "    stop                             stop the homebridge service" \
+      "    restart                          restart the homebridge service" \
+      "    add <plugin>@<version>           install a plugin" \
+      "    remove <plugin>@<version>        remove a plugin" \
+      "    update-node [version]            update Node.js" \
+      "    logs                             tails the homebridge service logs" \
+      "    status                           check if the Homebridge UI web server is running" \
+      "    shell                            open the Homebridge Terminal" \
+      "" \
+      "See the wiki for help with hb-service: https://homebridge.io/w/JTtHK"
+    ;;
+esac

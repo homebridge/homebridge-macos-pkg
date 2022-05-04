@@ -1,0 +1,8 @@
+#!/bin/sh
+
+# change to working directory
+cd "/Users/Shared/Homebridge"
+
+printf "Entering Homebridge Shell. To exit type 'exit'.\n\n"
+
+exec bash --rcfile "/Library/Application Support/Homebridge/bashrc-hb-shell"

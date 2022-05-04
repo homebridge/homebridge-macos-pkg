@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>HOME</key>
+		<string></string>
+	</dict>
+	<key>KeepAlive</key>
+	<true/>
+	<key>Label</key>
+	<string>io.homebridge.server</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/Library/Application Support/Homebridge/start.sh</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardErrorPath</key>
+	<string></string>
+	<key>StandardOutPath</key>
+	<string></string>
+	<key>UserName</key>
+	<string></string>
+	<key>WorkingDirectory</key>
+	<string></string>
+</dict>
+</plist>

@@ -1,0 +1,6 @@
+#!/bin/sh
+
+# bashrc file for the hb-shell command
+
+. "/Library/Application Support/Homebridge/source.sh"
+. "/Library/Application Support/Homebridge/bashrc"

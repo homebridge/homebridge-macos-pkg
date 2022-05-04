@@ -1,0 +1,56 @@
+#!/bin/sh
+
+set -e
+set -x
+
+. "/Library/Application Support/Homebridge/source.sh"
+
+if [ -f "/Library/LaunchDaemons/com.homebridge.server.plist" ]; then
+  # try and get a backup first
+  if [ ! -d  "$HB_SERVICE_STORAGE_PATH" ]; then
+    echo "Attempting to get backup from existing Homebridge service..."
+    "$HB_APP_PATH/scripts/get-backup.sh"
+  fi
+
+  # unload and remove the existing service
+  launchctl unload -w "/Library/LaunchDaemons/com.homebridge.server.plist" &>/dev/null || true
+  rm -rf "/Library/LaunchDaemons/com.homebridge.server.plist"
+fi
+
+# stop existing service
+if [ -f "$HOMEBRIDGE_PLIST_PATH" ]; then
+  launchctl unload -w "$HOMEBRIDGE_PLIST_PATH" &>/dev/null || true
+fi
+
+mkdir -p "$HB_SERVICE_STORAGE_PATH"
+
+corepack enable
+corepack prepare pnpm@7.0.0 --activate
+
+pnpm install -C "$HB_SERVICE_STORAGE_PATH" homebridge@latest homebridge-config-ui-x@4.43.3-test.5
+
+HB_USER=$USER
+if [ "$HB_USER" = "root" ]; then
+  HB_USER=$(stat -f '%Su' $HOME)
+fi
+
+chown -R "$HB_USER": "$HB_SERVICE_STORAGE_PATH"
+
+plutil -replace UserName -string "$HB_USER" "$HOMEBRIDGE_PLIST_PATH"
+plutil -replace WorkingDirectory -string "$HB_SERVICE_STORAGE_PATH" "$HOMEBRIDGE_PLIST_PATH"
+plutil -replace StandardErrorPath -string "$HB_SERVICE_STORAGE_PATH/homebridge.log" "$HOMEBRIDGE_PLIST_PATH"
+plutil -replace StandardOutPath -string "$HB_SERVICE_STORAGE_PATH/homebridge.log" "$HOMEBRIDGE_PLIST_PATH"
+plutil -replace EnvironmentVariables -xml "<dict><key>HOME</key><string>$HOME</string></dict>" "$HOMEBRIDGE_PLIST_PATH"
+
+# create symlink to hb-shell
+ln -fs "$HB_APP_PATH/hb-shell" "/usr/local/bin/hb-shell"
+
+# create symlink to hb-service-shim
+ln -fs "$HB_APP_PATH/hb-service-shim" "/usr/local/bin/hb-service"
+
+launchctl load -w "$HOMEBRIDGE_PLIST_PATH" &>/dev/null 
+
+# restore the backup if it exists
+if [ -f "/tmp/homebridge-macos-pkg/homebridge-macos-pkg-backup.tar.gz" ]; then
+  "$HB_APP_PATH/scripts/restore-backup.sh"
+fi
