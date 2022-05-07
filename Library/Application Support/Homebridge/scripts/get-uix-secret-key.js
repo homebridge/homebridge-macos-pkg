@@ -1,5 +1,11 @@
 #!/usr/bin/env node
 
+/**
+ * Get the jwt secret from the .uix-secrets file and return to stdout
+ * This script is in place of using `jq` on macOS
+ * get-uix-secret.js /path/to/.uix-secrets
+ */
+
 const fs = require('fs');
 
 try {

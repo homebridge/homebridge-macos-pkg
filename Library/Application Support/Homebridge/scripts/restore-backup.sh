@@ -1,5 +1,9 @@
 #!/bin/bash
 
+#
+# Restore the backup made pre-installation
+#
+
 . "/Library/Application Support/Homebridge/source.sh"
 . "$HB_APP_PATH/scripts/functions.sh"
 
@@ -11,7 +15,7 @@ if [ ! -f $HB_BACKUP_FILE_PATH ]; then
 fi
 
 # wait for homebridge to start
-retrymax=24
+retrymax=24f
 retrycount=0
 
 echo "Waiting for Homebridge to come online..."
@@ -43,13 +47,19 @@ if [ "$?" = "0" ]; then
   echo "Backup file uploaded";
 fi
 
+echo "Starting restore..."
+
 curl -fSs -X PUT -H "Authorization: Bearer $TOKEN" "http://localhost:$PORT/api/backup/restore/trigger"
 
 if [ "$?" = "0" ]; then
-  echo "Backup restore started";
+  echo "Backup restore complete";
 fi
 
-# remove backup
+# move backup to user trash
+chown $USER: "$HB_BACKUP_FILE_PATH"
+mv "$HB_BACKUP_FILE_PATH" "$HOME/.Trash/"
+
+# cleanup
 rm -rf "$HB_BACKUP_PATH"
 
 if [ "$?" != "0" ]; then
