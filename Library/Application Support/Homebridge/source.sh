@@ -8,7 +8,7 @@ export HB_PKG_ARCH="$(uname -m)"
 export NODE_BIN_PATH="$HB_APP_PATH/node-$HB_PKG_ARCH/bin"
 export HB_BIN_PATH="$HB_SERVICE_STORAGE_PATH/node_modules/.bin"
 
-export PATH="$HB_BIN_PATH:$NODE_BIN_PATH:$PATH"
+export PATH="$HB_APP_PATH/bin:$HB_BIN_PATH:$NODE_BIN_PATH:$PATH"
 
 export npm_config_global_style=true
 export npm_config_audit=false
@@ -22,3 +22,8 @@ export HOMEBRIDGE_MACOS_PACKAGE=1
 export UIX_CUSTOM_PLUGIN_PATH=$HB_SERVICE_STORAGE_PATH/node_modules
 export UIX_BASE_PATH_OVERRIDE=$HB_SERVICE_STORAGE_PATH/node_modules/homebridge-config-ui-x
 export UIX_USE_PNPM=1
+
+# Enable Homebridge UI Terminal in this packaged environment
+# Supported env toggles across UI versions
+export HOMEBRIDGE_CONFIG_UI_TERMINAL=1
+export HOMEBRIDGE_CONFIG_UI_TERMINAL_ENABLED=1

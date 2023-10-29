@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# Wrapper to ensure hb-service resolves to the macOS package shim first
+exec "/Library/Application Support/Homebridge/hb-service-shim" "$@"

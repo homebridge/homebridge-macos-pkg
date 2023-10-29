@@ -15,6 +15,15 @@ function check_port_override {
   fi
 }
 
+# Function to check if Homebridge service is running
+function is_service_running {
+  if launchctl list | grep -q "com.homebridge.server"; then
+    return 0  # Service is running
+  else
+    return 1  # Service is not running
+  fi
+}
+
 case "$1" in
   "start")
     echo "Starting Homebridge..."
@@ -97,3 +106,10 @@ case "$1" in
       "See the wiki for help with hb-service: https://homebridge.io/w/JTtHK"
     ;;
 esac
+
+# Check service status and set button label
+if is_service_running; then
+  echo "Restart Service"
+else
+  echo "Start Service"
+fi

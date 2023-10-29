@@ -1,0 +1,80 @@
+name: Signing Preflight
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    name: Validate codesigning and notarization secrets
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate secrets present
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=()
+          [ -n "${{ secrets.APPLE_CERTIFICATE_P12 }}" ] || missing+=(APPLE_CERTIFICATE_P12)
+          [ -n "${{ secrets.APPLE_CERTIFICATE_PASSWORD }}" ] || missing+=(APPLE_CERTIFICATE_PASSWORD)
+          [ -n "${{ secrets.APPLE_SIGN_ID }}" ] || missing+=(APPLE_SIGN_ID)
+          [ -n "${{ secrets.APPLE_ID }}" ] || missing+=(APPLE_ID)
+          [ -n "${{ secrets.APPLE_APP_PASSWORD }}" ] || missing+=(APPLE_APP_PASSWORD)
+          [ -n "${{ secrets.APPLE_TEAM_ID }}" ] || missing+=(APPLE_TEAM_ID)
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "Missing required secrets: ${missing[*]}" >&2
+            exit 1
+          fi
+          echo "All required secrets are set."
+
+      - name: Import certificate to temp keychain
+        env:
+          CERTIFICATE_P12: ${{ secrets.APPLE_CERTIFICATE_P12 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "$CERTIFICATE_P12" | base64 --decode > cert.p12
+          security create-keychain -p actions temp.keychain
+          security default-keychain -s temp.keychain
+          security unlock-keychain -p actions temp.keychain
+          security import cert.p12 -k temp.keychain -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign -T /usr/bin/productsign
+          security set-key-partition-list -S apple-tool:,apple: -s -k actions temp.keychain
+          echo "Installed signing certificate in temp keychain."
+
+      - name: Detect codesigning identities
+        env:
+          SIGN_ID: ${{ secrets.APPLE_SIGN_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "Available identities:"; security find-identity -p codesigning -v || true
+          if security find-identity -p codesigning -v | grep -F "${SIGN_ID}" >/dev/null 2>&1; then
+            echo "Found expected SIGN_ID: ${SIGN_ID}"
+          else
+            echo "SIGN_ID not found in keychain: ${SIGN_ID}" >&2
+            exit 1
+          fi
+
+      - name: Check notarization credentials
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_APP_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          # Create a temporary notarytool profile to validate credentials
+          xcrun notarytool store-credentials GitHubProfile \
+            --apple-id "$APPLE_ID" \
+            --team-id "$APPLE_TEAM_ID" \
+            --password "$APPLE_PASSWORD" \
+            --keychain-profile GitHubProfile
+          echo "Notarytool credentials stored successfully."
+          # Clean up profile
+          security delete-generic-password -l "notarytool GitHubProfile" ~/Library/Keychains/temp.keychain || true
+          echo "Preflight OK."
