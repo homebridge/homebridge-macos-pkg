@@ -1,0 +1,24 @@
+# This workflow will generate a macOS Installer when a release is created
+# For more information see: https://github.com/marketplace/actions/generate-macos-installer
+
+name: Generate macOS Installer
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: get-npm-version
+        id: package-version
+      - uses: martinbeentjes/npm-get-version-action@v1.3.1
+
+      - name: generate-dmg
+      - uses: akiojin/generate-mac-installer-github-action@v0.1.0
+        with:
+          root-directory: Build
+          bundle-path: Homebridge.app
+          identifier: com.akiojin.GitHubActionsForUnity
+          version: ${{ steps.package-version.outputs.current-version}}
